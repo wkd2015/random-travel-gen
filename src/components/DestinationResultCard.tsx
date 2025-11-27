@@ -1,0 +1,223 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+
+export type Destination = {
+  id: number;
+  country_code: string;
+  name_en: string;
+  name_local: string;
+  lat: number;
+  lng: number;
+  level: string;
+  image_url: string | null;
+};
+
+type Props = {
+  destination?: Destination | null;
+  open: boolean;
+  lang?: string;
+  originLabel?: string;
+};
+
+type WikiSummary = {
+  title: string;
+  extract: string;
+  url: string;
+};
+
+export function DestinationResultCard({
+  destination,
+  open,
+  lang = "en",
+  originLabel = "Global",
+}: Props) {
+  const [activeTab, setActiveTab] = useState<"wiki" | "ai">("wiki");
+  const [wiki, setWiki] = useState<WikiSummary | null>(null);
+  const [loadingWiki, setLoadingWiki] = useState(false);
+  const [aiText, setAiText] = useState("");
+  const [loadingAI, setLoadingAI] = useState(false);
+
+  // Wikipedia summary
+  useEffect(() => {
+    if (!destination || !open) return;
+    setWiki(null);
+    setLoadingWiki(true);
+
+    const controller = new AbortController();
+
+    const fetchWiki = async () => {
+      try {
+        const title = encodeURIComponent(destination.name_en);
+        const resp = await fetch(
+          `https://${lang}.wikipedia.org/api/rest_v1/page/summary/${title}`,
+          { signal: controller.signal },
+        );
+        if (!resp.ok) throw new Error("wiki error");
+        const data = await resp.json();
+        setWiki({
+          title: data.title,
+          extract: data.extract,
+          url:
+            data.content_urls?.desktop?.page ??
+            data.content_urls?.mobile?.page ??
+            "",
+        });
+      } catch (error) {
+        console.error(error);
+        setWiki(null);
+      } finally {
+        setLoadingWiki(false);
+      }
+    };
+
+    fetchWiki();
+
+    return () => controller.abort();
+  }, [destination, open, lang]);
+
+  const loadAI = async () => {
+    if (!destination) return;
+    setLoadingAI(true);
+    setAiText("");
+
+    try {
+      const res = await fetch("/api/ai/insights", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          origin: originLabel,
+          city: destination.name_en,
+          lang,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.text) {
+        setAiText(data.text);
+      } else {
+        setAiText("AI insights failed to load. Please try again.");
+      }
+    } catch (error) {
+      console.error(error);
+      setAiText("AI insights failed to load. Please try again.");
+    } finally {
+      setLoadingAI(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "ai" && aiText === "" && open) {
+      void loadAI();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, open]);
+
+  return (
+    <AnimatePresence>
+      {open && destination && (
+        <motion.div
+          initial={{ y: 40, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: 40, opacity: 0 }}
+          transition={{ type: "spring", stiffness: 260, damping: 24 }}
+          className="fixed bottom-4 left-1/2 z-30 w-full max-w-xl -translate-x-1/2 overflow-hidden rounded-3xl border border-white/15 bg-black/80 text-white shadow-2xl backdrop-blur-xl"
+        >
+          {destination.image_url && (
+            <div className="relative h-40 w-full overflow-hidden">
+              <img
+                src={destination.image_url}
+                alt={destination.name_en}
+                className="h-full w-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+              <div className="absolute bottom-4 left-4">
+                <div className="text-xs uppercase tracking-[0.25em] text-white/70">
+                  {destination.country_code} · {destination.level}
+                </div>
+                <div className="text-2xl font-semibold">
+                  {destination.name_en}
+                  <span className="ml-2 text-base text-white/70">
+                    {destination.name_local}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="p-4">
+            <div className="mb-3 flex gap-2 text-xs">
+              <button
+                type="button"
+                className={`rounded-full px-3 py-1 ${
+                  activeTab === "wiki"
+                    ? "bg-white text-black"
+                    : "bg-white/10 text-white/70"
+                }`}
+                onClick={() => setActiveTab("wiki")}
+              >
+                Wiki
+              </button>
+              <button
+                type="button"
+                className={`rounded-full px-3 py-1 ${
+                  activeTab === "ai"
+                    ? "bg-white text-black"
+                    : "bg-white/10 text-white/70"
+                }`}
+                onClick={() => setActiveTab("ai")}
+              >
+                AI Insights
+              </button>
+            </div>
+
+            {activeTab === "wiki" && (
+              <div className="text-sm leading-relaxed">
+                {loadingWiki && (
+                  <p className="text-white/60">Loading Wikipedia summary…</p>
+                )}
+                {!loadingWiki && wiki && (
+                  <>
+                    <p className="mb-2 text-white/90">{wiki.extract}</p>
+                    {wiki.url && (
+                      <a
+                        href={wiki.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs text-white/70 underline"
+                      >
+                        Open on Wikipedia ↗
+                      </a>
+                    )}
+                  </>
+                )}
+                {!loadingWiki && !wiki && (
+                  <p className="text-white/60">No Wikipedia summary found.</p>
+                )}
+              </div>
+            )}
+
+            {activeTab === "ai" && (
+              <div className="text-sm leading-relaxed">
+                {loadingAI && (
+                  <p className="text-white/60">Asking AI travel guide…</p>
+                )}
+                {!loadingAI && aiText && (
+                  <p className="text-white/90 whitespace-pre-line">{aiText}</p>
+                )}
+                {!loadingAI && !aiText && (
+                  <p className="text-white/60">No AI response yet.</p>
+                )}
+              </div>
+            )}
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+
