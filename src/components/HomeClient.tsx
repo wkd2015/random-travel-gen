@@ -2,10 +2,7 @@
 
 import { useState } from "react";
 import { RandomizerMap } from "@/components/map/RandomizerMap";
-import {
-  Destination,
-  DestinationResultCard,
-} from "@/components/DestinationResultCard";
+import { Destination, DestinationResultCard } from "@/components/DestinationResultCard";
 
 function getCountryLabel(code: string) {
   const upper = code.toUpperCase();
@@ -26,8 +23,13 @@ function getCountryLabel(code: string) {
   }
 }
 
-export function HomeClient() {
-  const [country, setCountry] = useState<string>("GLOBAL");
+type HomeClientProps = {
+  lang?: "en" | "zh";
+  initialCountry?: string;
+};
+
+export function HomeClient({ lang = "en", initialCountry = "GLOBAL" }: HomeClientProps) {
+  const [country, setCountry] = useState<string>(initialCountry);
   const [level, setLevel] = useState<string>("any");
   const [destination, setDestination] = useState<Destination | null>(null);
   const [animateKey, setAnimateKey] = useState(0);
@@ -62,25 +64,25 @@ export function HomeClient() {
       <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6">
         <header className="flex flex-col items-center gap-3 text-center">
           <div className="text-xs uppercase tracking-[0.35em] text-emerald-300/80">
-            Random Travel · MVP
+            {lang === "zh" ? "随机旅行 · MVP" : "Random Travel · MVP"}
           </div>
           <h1 className="text-balance text-3xl font-semibold sm:text-4xl md:text-5xl">
-            Throw a dart at the map,{" "}
+            {lang === "zh" ? "向地图扔一支飞镖，" : "Throw a dart at the map, "}
             <span className="bg-gradient-to-r from-emerald-300 to-cyan-300 bg-clip-text text-transparent">
-              discover your next city
+              {lang === "zh" ? "发现下一个目的地" : "discover your next city"}
             </span>
           </h1>
           <p className="max-w-2xl text-balance text-sm text-white/70 sm:text-base">
-            Pick a country or go global. We spin the globe, zoom into a random
-            city, pull a quick Wiki summary and ask AI for budget &amp; travel
-            tips.
+            {lang === "zh"
+              ? "选择一个国家或直接全球随机，我们旋转地球、放大到随机城市，并提供维基百科摘要和 AI 旅行建议。"
+              : "Pick a country or go global. We spin the globe, zoom into a random city, pull a quick Wiki summary and ask AI for budget & travel tips."}
           </p>
         </header>
 
         <section className="flex flex-col gap-4 rounded-3xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs uppercase tracking-[0.3em] text-white/60">
-              Country
+              {lang === "zh" ? "国家" : "Country"}
             </span>
             <select
               className="rounded-full border border-white/15 bg-black/40 px-4 py-1.5 text-sm outline-none"
@@ -96,7 +98,7 @@ export function HomeClient() {
             </select>
 
             <span className="ml-2 text-xs uppercase tracking-[0.3em] text-white/60">
-              Vibe
+              {lang === "zh" ? "氛围" : "Vibe"}
             </span>
             <select
               className="rounded-full border border-white/15 bg-black/40 px-4 py-1.5 text-sm outline-none"
@@ -119,7 +121,13 @@ export function HomeClient() {
             disabled={loading}
             className="inline-flex items-center justify-center gap-2 rounded-full bg-emerald-400 px-6 py-2 text-sm font-semibold text-black shadow-lg shadow-emerald-500/40 transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:bg-emerald-600/60"
           >
-            {loading ? "Spinning the globe…" : "Throw a dart 🎯"}
+            {loading
+              ? lang === "zh"
+                ? "正在旋转地球…"
+                : "Spinning the globe…"
+              : lang === "zh"
+                ? "扔出飞镖 🎯"
+                : "Throw a dart 🎯"}
           </button>
         </section>
 
@@ -144,7 +152,7 @@ export function HomeClient() {
       <DestinationResultCard
         destination={destination}
         open={Boolean(destination)}
-        lang="en"
+        lang={lang}
         originLabel={getCountryLabel(country)}
       />
     </div>
