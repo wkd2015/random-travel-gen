@@ -63,7 +63,7 @@ export function HomeClient({ lang = "en", initialCountry = "GLOBAL" }: HomeClien
       const data = (await res.json()) as Destination;
       setDestination(data);
       setAnimateKey((k) => k + 1);
-    } catch (error) {
+    } catch {
       const msg =
         lang === "zh"
           ? "获取随机目的地失败，请检查网络后重试。"

@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
-import { Share2, Copy, Check } from "lucide-react";
+import { Share2, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 
 export type Destination = {
   id: number;
@@ -68,8 +69,7 @@ export function DestinationResultCard({
             data.content_urls?.mobile?.page ??
             "",
         });
-      } catch (error) {
-        console.error(error);
+      } catch {
         const msg =
           lang === "zh"
             ? "维基百科内容加载失败，请稍后重试。"
@@ -115,8 +115,7 @@ export function DestinationResultCard({
         toast.error(msg);
         setAiText("");
       }
-    } catch (error) {
-      console.error(error);
+    } catch {
       const msg =
         lang === "zh"
           ? "AI 旅行建议加载失败，请检查网络后重试。"
@@ -149,7 +148,7 @@ export function DestinationResultCard({
           text: shareText,
           url: shareUrl,
         });
-      } catch (error) {
+      } catch {
         // User cancelled or error, fallback to copy
         await copyToClipboard(shareUrl);
       }
@@ -166,7 +165,7 @@ export function DestinationResultCard({
         lang === "zh" ? "链接已复制到剪贴板" : "Link copied to clipboard";
       toast.success(msg);
       setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
+    } catch {
       const msg =
         lang === "zh" ? "复制失败，请手动复制" : "Failed to copy";
       toast.error(msg);
@@ -185,10 +184,12 @@ export function DestinationResultCard({
         >
           {destination.image_url && (
             <div className="relative h-40 w-full overflow-hidden">
-              <img
+              <Image
                 src={destination.image_url}
                 alt={destination.name_en}
-                className="h-full w-full object-cover"
+                fill
+                className="object-cover"
+                unoptimized
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
               <div className="absolute bottom-4 left-4">

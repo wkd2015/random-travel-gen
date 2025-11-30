@@ -86,7 +86,6 @@ function countryLabel(lang: Lang, code: string): string {
 
 export async function generateMetadata(
   { params }: Params,
-  _parent: ResolvingMetadata,
 ): Promise<Metadata> {
   const lang = normalizeLang(params.lang);
   const slug = normalizeCountry(params.country);
