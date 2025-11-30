@@ -135,6 +135,7 @@ export function DestinationResultCard({
   }, [activeTab, open]);
 
   const handleShare = async () => {
+    if (!destination) return;
     const shareUrl = `${window.location.origin}${window.location.pathname}?city=${encodeURIComponent(destination.name_en)}`;
     const shareText =
       lang === "zh"
