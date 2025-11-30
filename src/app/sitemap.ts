@@ -5,7 +5,7 @@ const SUPPORTED_COUNTRIES = ["global", "us", "cn", "jp", "fr", "th"] as const;
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl =
-    process.env.NEXT_PUBLIC_BASE_URL ?? "https://randomtraveldestination.com";
+    process.env.NEXT_PUBLIC_BASE_URL ?? "https://randomdestinationgenerator.com";
 
   const urls: MetadataRoute.Sitemap = [
     {
