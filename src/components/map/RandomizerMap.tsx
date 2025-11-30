@@ -29,6 +29,7 @@ export function RandomizerMap({
     zoom: 1.2,
     pitch: 45,
     bearing: 0,
+    padding: { top: 0, bottom: 0, left: 0, right: 0 },
   });
 
   // 初始飞到全球视角
