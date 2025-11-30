@@ -94,7 +94,7 @@ export async function generateMetadata(
   const label = countryLabel(lang, countryCode);
 
   const baseUrl =
-    process.env.NEXT_PUBLIC_BASE_URL ?? "https://random-travel-gen.vercel.app";
+    process.env.NEXT_PUBLIC_BASE_URL ?? "https://randomtraveldestination.com";
 
   const title =
     lang === "zh"
@@ -144,7 +144,7 @@ export default function GeneratorPage({ params }: Params) {
   const label = countryLabel(lang, countryCode);
 
   const baseUrl =
-    process.env.NEXT_PUBLIC_BASE_URL ?? "https://random-travel-gen.vercel.app";
+    process.env.NEXT_PUBLIC_BASE_URL ?? "https://randomtraveldestination.com";
   const url = `${baseUrl}/${lang}/generator/${slug}`;
 
   const jsonLd = {

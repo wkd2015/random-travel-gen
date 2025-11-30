@@ -1,8 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { RandomizerMap } from "@/components/map/RandomizerMap";
 import { Destination, DestinationResultCard } from "@/components/DestinationResultCard";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 function getCountryLabel(code: string) {
   const upper = code.toUpperCase();
@@ -44,16 +53,22 @@ export function HomeClient({ lang = "en", initialCountry = "GLOBAL" }: HomeClien
       });
       const res = await fetch(`/api/random-destination?${params.toString()}`);
       if (!res.ok) {
-        // eslint-disable-next-line no-console
-        console.error("Failed to fetch random destination");
+        const msg =
+          lang === "zh"
+            ? "没有找到目的地，请稍后重试。"
+            : "No destination found. Please try again.";
+        toast.error(msg);
         return;
       }
       const data = (await res.json()) as Destination;
       setDestination(data);
       setAnimateKey((k) => k + 1);
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error(error);
+      const msg =
+        lang === "zh"
+          ? "获取随机目的地失败，请检查网络后重试。"
+          : "Failed to fetch a random destination. Please check your network and try again.";
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -84,43 +99,44 @@ export function HomeClient({ lang = "en", initialCountry = "GLOBAL" }: HomeClien
             <span className="text-xs uppercase tracking-[0.3em] text-white/60">
               {lang === "zh" ? "国家" : "Country"}
             </span>
-            <select
-              className="rounded-full border border-white/15 bg-black/40 px-4 py-1.5 text-sm outline-none"
-              value={country}
-              onChange={(e) => setCountry(e.target.value)}
-            >
-              <option value="GLOBAL">🌍 Global</option>
-              <option value="US">🇺🇸 United States</option>
-              <option value="CN">🇨🇳 China</option>
-              <option value="JP">🇯🇵 Japan</option>
-              <option value="FR">🇫🇷 France</option>
-              <option value="TH">🇹🇭 Thailand</option>
-            </select>
+            <Select value={country} onValueChange={setCountry}>
+              <SelectTrigger className="min-w-[9rem]">
+                <SelectValue
+                  placeholder={lang === "zh" ? "选择国家" : "Select country"}
+                />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="GLOBAL">🌍 Global</SelectItem>
+                <SelectItem value="US">🇺🇸 United States</SelectItem>
+                <SelectItem value="CN">🇨🇳 China / 中国</SelectItem>
+                <SelectItem value="JP">🇯🇵 Japan / 日本</SelectItem>
+                <SelectItem value="FR">🇫🇷 France</SelectItem>
+                <SelectItem value="TH">🇹🇭 Thailand / ประเทศไทย</SelectItem>
+              </SelectContent>
+            </Select>
 
             <span className="ml-2 text-xs uppercase tracking-[0.3em] text-white/60">
               {lang === "zh" ? "氛围" : "Vibe"}
             </span>
-            <select
-              className="rounded-full border border-white/15 bg-black/40 px-4 py-1.5 text-sm outline-none"
-              value={level}
-              onChange={(e) => setLevel(e.target.value)}
-            >
-              <option value="any">🎯 Any</option>
-              <option value="city">🏙 City</option>
-              <option value="beach">🏖 Beach</option>
-              <option value="island">🏝 Island</option>
-              <option value="nature">⛰ Nature</option>
-              <option value="culture">🏛 Culture</option>
-              <option value="wine">🍷 Wine</option>
-            </select>
+            <Select value={level} onValueChange={setLevel}>
+              <SelectTrigger className="min-w-[8rem]">
+                <SelectValue
+                  placeholder={lang === "zh" ? "任意" : "Any"}
+                />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="any">🎯 Any</SelectItem>
+                <SelectItem value="city">🏙 City</SelectItem>
+                <SelectItem value="beach">🏖 Beach</SelectItem>
+                <SelectItem value="island">🏝 Island</SelectItem>
+                <SelectItem value="nature">⛰ Nature</SelectItem>
+                <SelectItem value="culture">🏛 Culture</SelectItem>
+                <SelectItem value="wine">🍷 Wine</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-          <button
-            type="button"
-            onClick={handleGo}
-            disabled={loading}
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-emerald-400 px-6 py-2 text-sm font-semibold text-black shadow-lg shadow-emerald-500/40 transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:bg-emerald-600/60"
-          >
+          <Button type="button" onClick={handleGo} disabled={loading} size="lg">
             {loading
               ? lang === "zh"
                 ? "正在旋转地球…"
@@ -128,7 +144,7 @@ export function HomeClient({ lang = "en", initialCountry = "GLOBAL" }: HomeClien
               : lang === "zh"
                 ? "扔出飞镖 🎯"
                 : "Throw a dart 🎯"}
-          </button>
+          </Button>
         </section>
 
         <section className="mt-2">

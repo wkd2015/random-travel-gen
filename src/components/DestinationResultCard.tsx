@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { toast } from "sonner";
+import { Share2, Copy, Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export type Destination = {
   id: number;
@@ -38,6 +41,7 @@ export function DestinationResultCard({
   const [loadingWiki, setLoadingWiki] = useState(false);
   const [aiText, setAiText] = useState("");
   const [loadingAI, setLoadingAI] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   // Wikipedia summary
   useEffect(() => {
@@ -66,6 +70,11 @@ export function DestinationResultCard({
         });
       } catch (error) {
         console.error(error);
+        const msg =
+          lang === "zh"
+            ? "维基百科内容加载失败，请稍后重试。"
+            : "Failed to load Wikipedia summary. Please try again later.";
+        toast.error(msg);
         setWiki(null);
       } finally {
         setLoadingWiki(false);
@@ -99,11 +108,21 @@ export function DestinationResultCard({
       if (data.text) {
         setAiText(data.text);
       } else {
-        setAiText("AI insights failed to load. Please try again.");
+        const msg =
+          lang === "zh"
+            ? "AI 旅行建议加载失败，请稍后重试。"
+            : "AI insights failed to load. Please try again.";
+        toast.error(msg);
+        setAiText("");
       }
     } catch (error) {
       console.error(error);
-      setAiText("AI insights failed to load. Please try again.");
+      const msg =
+        lang === "zh"
+          ? "AI 旅行建议加载失败，请检查网络后重试。"
+          : "AI insights failed to load. Please check your network and try again.";
+      toast.error(msg);
+      setAiText("");
     } finally {
       setLoadingAI(false);
     }
@@ -115,6 +134,44 @@ export function DestinationResultCard({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, open]);
+
+  const handleShare = async () => {
+    const shareUrl = `${window.location.origin}${window.location.pathname}?city=${encodeURIComponent(destination.name_en)}`;
+    const shareText =
+      lang === "zh"
+        ? `我随机抽到了：${destination.name_en}！用飞镖在地图上选旅行目的地 🎯`
+        : `I got: ${destination.name_en}! Random travel destination generator 🎯`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: shareText,
+          text: shareText,
+          url: shareUrl,
+        });
+      } catch (error) {
+        // User cancelled or error, fallback to copy
+        await copyToClipboard(shareUrl);
+      }
+    } else {
+      await copyToClipboard(shareUrl);
+    }
+  };
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      const msg =
+        lang === "zh" ? "链接已复制到剪贴板" : "Link copied to clipboard";
+      toast.success(msg);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      const msg =
+        lang === "zh" ? "复制失败，请手动复制" : "Failed to copy";
+      toast.error(msg);
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -149,29 +206,50 @@ export function DestinationResultCard({
           )}
 
           <div className="p-4">
-            <div className="mb-3 flex gap-2 text-xs">
-              <button
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <div className="flex gap-2 text-xs">
+                <button
+                  type="button"
+                  className={`rounded-full px-3 py-1 ${
+                    activeTab === "wiki"
+                      ? "bg-white text-black"
+                      : "bg-white/10 text-white/70"
+                  }`}
+                  onClick={() => setActiveTab("wiki")}
+                >
+                  Wiki
+                </button>
+                <button
+                  type="button"
+                  className={`rounded-full px-3 py-1 ${
+                    activeTab === "ai"
+                      ? "bg-white text-black"
+                      : "bg-white/10 text-white/70"
+                  }`}
+                  onClick={() => setActiveTab("ai")}
+                >
+                  AI Insights
+                </button>
+              </div>
+              <Button
                 type="button"
-                className={`rounded-full px-3 py-1 ${
-                  activeTab === "wiki"
-                    ? "bg-white text-black"
-                    : "bg-white/10 text-white/70"
-                }`}
-                onClick={() => setActiveTab("wiki")}
+                variant="ghost"
+                size="sm"
+                onClick={handleShare}
+                className="h-7 gap-1.5 text-xs text-white/70 hover:text-white"
               >
-                Wiki
-              </button>
-              <button
-                type="button"
-                className={`rounded-full px-3 py-1 ${
-                  activeTab === "ai"
-                    ? "bg-white text-black"
-                    : "bg-white/10 text-white/70"
-                }`}
-                onClick={() => setActiveTab("ai")}
-              >
-                AI Insights
-              </button>
+                {copied ? (
+                  <>
+                    <Check className="h-3 w-3" />
+                    {lang === "zh" ? "已复制" : "Copied"}
+                  </>
+                ) : (
+                  <>
+                    <Share2 className="h-3 w-3" />
+                    {lang === "zh" ? "分享" : "Share"}
+                  </>
+                )}
+              </Button>
             </div>
 
             {activeTab === "wiki" && (
